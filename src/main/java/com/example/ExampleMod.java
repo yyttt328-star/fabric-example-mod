@@ -1,30 +1,31 @@
 package com.example;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLivingEntityEvents;
 
-import net.minecraft.item.Items;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.VillagerProfession;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 
 public class ExampleMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
 
-        for (VillagerProfession prof : VillagerProfession.values()) {
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, amount) -> {
 
-            TradeOfferHelper.registerVillagerOffers(prof, 1, factories -> {
-                factories.add((entity, random) ->
-                    new TradeOffer(
-                        new net.minecraft.item.ItemStack(Items.EMERALD, 1),
-                        new net.minecraft.item.ItemStack(Items.DIAMOND, 1),
-                        999,
-                        1,
-                        0.05f
-                    )
-                );
-            });
-        }
+            if (!(entity instanceof VillagerEntity villager)) return true;
+
+            if (!(damageSource.getAttacker() instanceof ZombieEntity zombie)) return true;
+
+            // 💀 paksa zombie convert (kayak hard mode)
+            zombie.setCanBreakDoors(true); // optional, biar lebih “hard mode feel”
+            zombie.setPersistent();
+
+            // ini kunci: paksa behavior zombify
+            villager.setHealth(0.1f);
+
+            return true;
+        });
     }
 }
